@@ -1,0 +1,22 @@
+[package]
+name = "rustchain-wallet"
+version = "0.1.0"
+edition = "2021"
+description = "RustChain CLI Wallet - Send, receive, and manage RTC tokens"
+authors = ["RustChain Community"]
+license = "MIT"
+
+[dependencies]
+clap = { version = "4.4", features = ["derive"] }
+ureq = { version = "2.9", features = ["json"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1", features = ["full"] }
+dirs = "5.0"
+thiserror = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1

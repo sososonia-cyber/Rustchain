@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RustChain Miner Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a14;
+            --bg-secondary: #12121f;
+            --bg-card: #1a1a2e;
+            --bg-card-hover: #22223a;
+            --accent-gold: #f39c12;
+            --accent-gold-dim: #c7850f;
+            --accent-blue: #3498db;
+            --accent-green: #27ae60;
+            --accent-red: #e74c3c;
+            --accent-purple: #9b59b6;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b8;
+            --border-color: #2a2a40;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, var(--accent-gold), #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-dim));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .refresh-info {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--accent-gold);
+        }
+
+        .stat-value.green { color: var(--accent-green); }
+        .stat-value.blue { color: var(--accent-blue); }
+        .stat-value.purple { color: var(--accent-purple); }
+
+        .table-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent-gold);
+        }
+
+        .btn.active {
+            background: var(--accent-gold);
+            color: var(--bg-primary);
+            border-color: var(--accent-gold);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 1rem 1.5rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            color: var(--accent-gold);
+        }
+
+        td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+        }
+
+        tr:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .miner-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-g4 { background: #2d5a27; color: #7fff00; }
+        .badge-g5 { background: #1e3a5f; color: #00bfff; }
+        .badge-power8 { background: #4a235a; color: #da70d6; }
+        .badge-apple { background: #2c3e50; color: #b0b0b0; }
+        .badge-modern { background: #1a1a2e; color: #ffd700; }
+        .badge-vintage { background: #5d4e37; color: #deb887; }
+
+        .multiplier {
+            color: var(--accent-gold);
+            font-weight: 600;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-online .status-dot { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
+        .status-offline .status-dot { background: var(--accent-red); }
+
+        .status-text {
+            font-size: 0.85rem;
+        }
+
+        .status-online .status-text { color: var(--accent-green); }
+        .status-offline .status-text { color: var(--accent-red); }
+
+        .timestamp {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .last-active {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .error {
+            text-align: center;
+            padding: 3rem;
+            color: var(--accent-red);
+        }
+
+        .hidden { display: none; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .loading-indicator {
+            animation: pulse 1.5s infinite;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .table-container { overflow-x: auto; }
+            table { min-width: 800px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">⛏️</div>
+            <h1>RustChain Miner Dashboard</h1>
+        </div>
+        <div class="refresh-info">
+            Auto-refresh: <span id="countdown">30</span>s | Last update: <span id="lastUpdate">--:--:--</span>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Miners</div>
+                <div class="stat-value" id="totalMiners">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Online</div>
+                <div class="stat-value green" id="onlineMiners">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Offline</div>
+                <div class="stat-value red" id="offlineMiners">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Avg Multiplier</div>
+                <div class="stat-value purple" id="avgMultiplier">--</div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="table-header">
+                <div class="table-title">Active Miners</div>
+                <div class="table-actions">
+                    <button class="btn active" id="sortOnline" onclick="sortMiners('online')">Online First</button>
+                    <button class="btn" id="sortMultiplier" onclick="sortMiners('multiplier')">By Multiplier</button>
+                    <button class="btn" id="sortRecent" onclick="sortMiners('recent')">Recent</button>
+                    <button class="btn" onclick="refreshData()">🔄 Refresh</button>
+                </div>
+            </div>
+            <div id="loading" class="loading">
+                <span class="loading-indicator">Loading miners...</span>
+            </div>
+            <div id="error" class="error hidden"></div>
+            <table id="minerTable" class="hidden">
+                <thead>
+                    <tr>
+                        <th onclick="sortBy('name')">Miner</th>
+                        <th onclick="sortBy('architecture')">Architecture</th>
+                        <th onclick="sortBy('multiplier')">Multiplier</th>
+                        <th onclick="sortBy('status')">Status</th>
+                        <th onclick="sortBy('lastAttestation')">Last Attestation</th>
+                    </tr>
+                </thead>
+                <tbody id="minerBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://explorer.rustchain.org';
+        let miners = [];
+        let sortMode = 'online';
+        let refreshInterval = 30;
+        let countdown = refreshInterval;
+
+        // Architecture badge mapping
+        const archBadges = {
+            'G4': { class: 'badge-g4', icon: '🍎' },
+            'G5': { class: 'badge-g5', icon: '📀' },
+            'POWER8': { class: 'badge-power8', icon: '🟣' },
+            'POWER9': { class: 'badge-power8', icon: '🟣' },
+            'Apple Silicon': { class: 'badge-apple', icon: '🍎' },
+            'Modern': { class: 'badge-modern', icon: '💻' },
+            'Vintage': { class: 'badge-vintage', icon: '📜' }
+        };
+
+        function getBadge(arch) {
+            const key = Object.keys(archBadges).find(k => arch.includes(k)) || 'Modern';
+            const badge = archBadges[key];
+            return `<span class="badge ${badge.class}">${badge.icon} ${key}</span>`;
+        }
+
+        function getStatus(miner) {
+            const now = Date.now();
+            const lastAttest = miner.last_attestation_at ? new Date(miner.last_attestation_at).getTime() : 0;
+            const diffMinutes = (now - lastAttest) / 1000 / 60;
+            const isOnline = diffMinutes < 5;
+            
+            return {
+                online: isOnline,
+                class: isOnline ? 'status-online' : 'status-offline',
+                text: isOnline ? 'Online' : 'Offline'
+            };
+        }
+
+        function formatTime(dateStr) {
+            if (!dateStr) return '--';
+            const date = new Date(dateStr);
+            return date.toLocaleTimeString();
+        }
+
+        function formatAgo(dateStr) {
+            if (!dateStr) return '--';
+            const date = new Date(dateStr);
+            const diff = Date.now() - date.getTime();
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(minutes / 60);
+            
+            if (minutes < 1) return 'Just now';
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            return `${Math.floor(hours/24)}d ago`;
+        }
+
+        async function fetchMiners() {
+            try {
+                const response = await fetch(`${API_BASE}/api/miners`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                return data.miners || [];
+            } catch (error) {
+                console.error('Error fetching miners:', error);
+                throw error;
+            }
+        }
+
+        function updateStats(miners) {
+            const total = miners.length;
+            const online = miners.filter(m => getStatus(m).online).length;
+            const offline = total - online;
+            const avgMult = total > 0 
+                ? (miners.reduce((sum, m) => sum + (parseFloat(m.multiplier) || 1), 0) / total).toFixed(2)
+                : 0;
+
+            document.getElementById('totalMiners').textContent = total;
+            document.getElementById('onlineMiners').textContent = online;
+            document.getElementById('offlineMiners').textContent = offline;
+            document.getElementById('avgMultiplier').textContent = `${avgMult}x`;
+        }
+
+        function renderMiners(data) {
+            const tbody = document.getElementById('minerBody');
+            tbody.innerHTML = '';
+
+            // Sort miners based on current mode
+            let sorted = [...data];
+            switch(sortMode) {
+                case 'online':
+                    sorted.sort((a, b) => {
+                        const statusA = getStatus(a).online ? 0 : 1;
+                        const statusB = getStatus(b).online ? 0 : 1;
+                        return statusA - statusB;
+                    });
+                    break;
+                case 'multiplier':
+                    sorted.sort((a, b) => (parseFloat(b.multiplier) || 0) - (parseFloat(a.multiplier) || 0));
+                    break;
+                case 'recent':
+                    sorted.sort((a, b) => new Date(b.last_attestation_at) - new Date(a.last_attestation_at));
+                    break;
+            }
+
+            sorted.forEach(miner => {
+                const status = getStatus(miner);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="miner-name">${miner.name || miner.wallet}</td>
+                    <td>${getBadge(miner.architecture || 'Modern')}</td>
+                    <td class="multiplier">${miner.multiplier || '1.0'}x</td>
+                    <td>
+                        <div class="status ${status.class}">
+                            <span class="status-dot"></span>
+                            <span class="status-text">${status.text}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="timestamp">${formatTime(miner.last_attestation_at)}</div>
+                        <div class="last-active">${formatAgo(miner.last_attestation_at)}</div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        async function refreshData() {
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('minerTable').classList.add('hidden');
+            document.getElementById('error').classList.add('hidden');
+
+            try {
+                miners = await fetchMiners();
+                updateStats(miners);
+                renderMiners(miners);
+                
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('minerTable').classList.remove('hidden');
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+            } catch (error) {
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('error').textContent = `Error: ${error.message}`;
+                document.getElementById('error').classList.remove('hidden');
+            }
+        }
+
+        function sortMiners(mode) {
+            sortMode = mode;
+            document.querySelectorAll('.table-actions .btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`sort${mode.charAt(0).toUpperCase() + mode.slice(1)}`).classList.add('active');
+            renderMiners(miners);
+        }
+
+        function sortBy(column) {
+            const modes = {
+                'name': 'multiplier',
+                'architecture': 'multiplier', 
+                'multiplier': 'multiplier',
+                'status': 'online',
+                'lastAttestation': 'recent'
+            };
+            sortMiners(modes[column] || 'online');
+        }
+
+        // Countdown timer
+        setInterval(() => {
+            countdown--;
+            document.getElementById('countdown').textContent = countdown;
+            if (countdown <= 0) {
+                countdown = refreshInterval;
+                refreshData();
+            }
+        }, 1000);
+
+        // Initial load
+        refreshData();
+    </script>
+</body>
+</html>
