@@ -1,0 +1,31 @@
+[package]
+name = "rustchain-epoch-reward-calculator"
+version = "1.0.0"
+edition = "2021"
+description = "RustChain Epoch Reward Calculator - Calculate mining rewards for epochs"
+authors = ["sososonia-cyber"]
+license = "MIT"
+repository = "https://github.com/sososonia-cyber/Rustchain"
+
+# Use simple HTTP without TLS dependency
+[dependencies]
+ureq = { version = "2.6", features = ["json"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+clap = { version = "4.0", features = ["derive"] }
+
+# [dependencies.rustchain-address]
+# path = "../rustchain-address-tool"
+
+[lib]
+name = "epoch_calculator"
+path = "src/lib.rs"
+
+[[bin]]
+name = "rustchain-epoch-reward-calculator"
+path = "src/main.rs"
+
+[package.metadata.bounty]
+issue = "https://github.com/Scottcjn/rustchain-bounties/issues/674"
+tier = "1"
+reward = "25-50 RTC"
